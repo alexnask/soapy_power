@@ -7,6 +7,9 @@ import numpy
 
 from soapypower import threadpool
 
+import soapypower.version
+import simplesoapy
+
 if sys.platform == 'win32':
     import msvcrt
 
@@ -94,6 +97,9 @@ class SoapyPowerBinFormat:
             f.seek(0)
             return None
 
+        # Version information
+        version_info = self.__read_string(f)
+
         # Device Header
         # Info
         device_info = self.__read_string(f)
@@ -128,6 +134,7 @@ class SoapyPowerBinFormat:
         )
 
         args = {
+            'version' : version_info,
             'device' : device_header,
             'sweep' : sweep_header
         }
@@ -137,6 +144,15 @@ class SoapyPowerBinFormat:
     def write_header(self, f, args, device_info):
         """Write the recording header to file-like object"""
         f.write(self.recording_magic)
+
+        # Version info
+        versions = []
+        versions.append('soapy_power {}'.format(soapypower.version.__version__))
+        try:
+            versions.extend(simplesoapy.versions())
+        except AttributeError:
+            versions.append('simplesoapy {}'.format(simplesoapy.__version__))
+        self.__write_string(f, '; '.join(versions))
 
         # Device header
         # Info
